@@ -1,7 +1,7 @@
 from echo_maze import EchoMaze
 
 
-maze = EchoMaze(width=9, height=9)
+maze = EchoMaze(width=10, height=10)
 
 # 打印迷宫结构
 maze.print()
