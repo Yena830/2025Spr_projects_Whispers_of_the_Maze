@@ -3,19 +3,36 @@ from echo_maze import EchoMaze
 
 pygame.init()
 pygame.font.init()
-font = pygame.font.SysFont(None, 60)
+title_font=pygame.font.SysFont(None,50)
+font = pygame.font.SysFont(None, 30)
+small_font = pygame.font.SysFont(None, 30)
 
+
+pygame.mixer.music.load('sounds/creepy_bg.mp3')
+pygame.mixer.music.play(-1)
 slide_sound = pygame.mixer.Sound('sounds/slide.mp3')
 thud_sound = pygame.mixer.Sound('sounds/thud.mp3')
 growl_sound = pygame.mixer.Sound('sounds/growl.mp3')
 breeze_sound = pygame.mixer.Sound('sounds/breeze.mp3')
 win_sound = pygame.mixer.Sound('sounds/win.mp3')
-lose_sound = pygame.mixer.Sound('sounds/lose.mp3')
+lose_sound = pygame.mixer.Sound('sounds/girl_lose.mp3')
 
-CELL_SIZE = 40
+CELL_SIZE = 60
 VIEW_SIZE = 7  # 视野范围 7x7
-SCREEN = pygame.display.set_mode((VIEW_SIZE * CELL_SIZE, VIEW_SIZE * CELL_SIZE))
+SCREEN = pygame.display.set_mode((VIEW_SIZE * CELL_SIZE, VIEW_SIZE * CELL_SIZE + 50))
 pygame.display.set_caption("EchoMaze - Follow View")
+
+
+player_sprites = {
+    'UP': pygame.image.load('icon/player_up.png'),
+    'DOWN': pygame.image.load('icon/player_down.png'),
+    'LEFT': pygame.image.load('icon/left.png'),
+    'RIGHT': pygame.image.load('icon/right.png')
+}
+current_sprite = player_sprites['DOWN']
+
+# player_img = pygame.image.load('icon/icon.png')
+# player_img = pygame.transform.scale(player_img, (CELL_SIZE, CELL_SIZE))
 
 BLACK = (0, 0, 0)
 GRAY = (150, 150, 150)
@@ -23,6 +40,7 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 CYAN = (0, 100, 255)
 YELLOW = (255, 255, 0)
+WHITE = (255, 255, 255)
 
 def draw_button(text, y_pos):
     button_font = pygame.font.SysFont(None, 40)
@@ -34,9 +52,15 @@ def draw_button(text, y_pos):
 
 def show_start_screen():
     SCREEN.fill(BLACK)
-    title = font.render("EchoMaze", True, YELLOW)
-    SCREEN.blit(title, title.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, 100)))
-    start_btn = draw_button("Start Game", 200)
+    title = title_font.render("Whispers of the Maze", True, RED)
+    SCREEN.blit(title, title.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, 150)))
+
+
+    subtitle = font.render("Can you escape? Find the exit!", True, WHITE)
+    SCREEN.blit(subtitle, subtitle.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, 200)))
+
+
+    start_btn = draw_button("Start Game", 400)
     pygame.display.flip()
 
     waiting = True
@@ -53,10 +77,10 @@ def show_start_screen():
 
 def show_end_screen(message, color):
     SCREEN.fill(BLACK)
-    text = font.render(message, True, color)
-    SCREEN.blit(text, text.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, 100)))
-    restart_btn = draw_button("Restart", 200)
-    quit_btn = draw_button("Quit", 260)
+    text = title_font.render(message, True, color)
+    SCREEN.blit(text, text.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, 200)))
+    restart_btn = draw_button("Restart", 300)
+    quit_btn = draw_button("Quit", 350)
     pygame.display.flip()
 
     waiting = True
@@ -83,10 +107,11 @@ def run_game():
     player_pos = list(maze.start)
     echo_feedback = []
     echo_timer = 0
-    running = True
+    status_message = "Find the exit and escape this place!"
     clock = pygame.time.Clock()
+    global current_sprite
 
-    while running:
+    while True:
         clock.tick(60)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -104,16 +129,19 @@ def run_game():
                     move_dir = 'RIGHT'
 
                 if move_dir:
+                    current_sprite = player_sprites[move_dir]
                     dx, dy = maze.DIRECTIONS[move_dir]
                     idx = maze._idx(player_pos[0], player_pos[1])
                     if not maze.cells[idx][move_dir]:
                         player_pos[0] += dx
                         player_pos[1] += dy
+                        status_message = f"You moved {move_dir}."
                         if maze.floor_type[player_pos[1]][player_pos[0]] == 'ice':
                             slide_sound.play()
                             dest = maze.slide_dest.get(tuple(player_pos), {}).get(move_dir)
                             if dest:
                                 player_pos = list(dest)
+                                status_message = f"Oops! You slipped across the ice!"
 
                         if tuple(player_pos) == maze.end:
                             win_sound.play()
@@ -136,6 +164,11 @@ def run_game():
 
                 if echo_dir:
                     echoes = maze.send_echo(tuple(player_pos), echo_dir)
+                    if not echoes:
+                        status_message = "Silence... Nothing detected."
+                    else:
+                        first_echo = echoes[0]
+                        status_message = f"You hear {first_echo['type']} after {first_echo['delay']}s."
                     echo_feedback = [(echo_dir, e['type'], (e['delay']//2)+1) for e in echoes]
                     echo_timer = pygame.time.get_ticks()
                     for e in echoes:
@@ -166,7 +199,7 @@ def run_game():
                 vx = ex - offset_x
                 vy = ey - offset_y
                 if 0 <= vx < VIEW_SIZE and 0 <= vy < VIEW_SIZE:
-                    rect = pygame.Rect(vx * CELL_SIZE, vy * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                    rect = pygame.Rect(vx * CELL_SIZE, vy * CELL_SIZE + 50, CELL_SIZE, CELL_SIZE)
                     if obj_type == 'wall':
                         pygame.draw.rect(SCREEN, GRAY, rect)
                     elif obj_type == 'monster':
@@ -174,8 +207,12 @@ def run_game():
                     elif obj_type == 'exit':
                         pygame.draw.rect(SCREEN, GREEN, rect)
 
-        center_rect = pygame.Rect((VIEW_SIZE//2) * CELL_SIZE, (VIEW_SIZE//2) * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-        pygame.draw.circle(SCREEN, YELLOW, center_rect.center, CELL_SIZE // 3)
+        center_rect = pygame.Rect((VIEW_SIZE//2) * CELL_SIZE, (VIEW_SIZE//2) * CELL_SIZE + 50, CELL_SIZE, CELL_SIZE)
+        # pygame.draw.circle(SCREEN, YELLOW, center_rect.center, CELL_SIZE // 3)
+        SCREEN.blit(pygame.transform.scale(current_sprite, (CELL_SIZE, CELL_SIZE)), center_rect)
+
+        status_text = small_font.render(status_message, True, WHITE)
+        SCREEN.blit(status_text, (10, 10))
 
         pygame.display.flip()
 
