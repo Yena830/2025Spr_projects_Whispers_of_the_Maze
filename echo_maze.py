@@ -21,7 +21,7 @@ class EchoMaze:
     }
     OPPOSITE = {'UP': 'DOWN', 'DOWN': 'UP', 'RIGHT': 'LEFT', 'LEFT': 'RIGHT'}
 
-    def __init__(self, width=10, height=10, monster_count=5, difficulty=0.5):
+    def __init__(self, width=10, height=10, monster_count=None, difficulty=0.5):
         self.width = width
         self.height = height
         #每个cell初始化四面墙
@@ -53,32 +53,29 @@ class EchoMaze:
         self._assign_ice_by_ratio(ratio=0.3)  
         
                
-        def send_echo(self, player_pos, direction):
-            """
-            发声探测：最远 3 格，遇到墙/怪物/出口即停，
-            返回列表[{"type":..., "delay":...}]，按 delay 排序。
-            """
-            echoes = []
-            x, y = player_pos
-            dx, dy = self.DIRECTIONS[direction]
-            for step in range(1, 4):
-                prev_x, prev_y = x + dx * (step - 1), y + dy * (step - 1)
-
-                if self.cells[self._idx(prev_x, prev_y)][direction]:
-                    echoes.append({"type": "wall", "delay": (step - 1) * 2})
-                    break
-
-                nx, ny = x + dx * step, y + dy * step
-                if not self._in_bounds(nx, ny):
-                    break
-
-                if (nx, ny) in self.monsters:
-                    echoes.append({"type": "monster", "delay": (step - 1) * 2})
-                    break
-                if (nx, ny) == self.end:
-                    echoes.append({"type": "exit", "delay": (step - 1) * 2})
-                    break
-            return sorted(echoes, key=lambda e: e['delay'])
+    def send_echo(self, player_pos, direction):
+        """
+        发声探测：最远 3 格，遇到墙/怪物/出口即停，
+        返回列表[{"type":..., "delay":...}]，按 delay 排序。
+        """
+        echoes = []
+        x, y = player_pos
+        dx, dy = self.DIRECTIONS[direction]
+        for step in range(1, 4):
+            prev_x, prev_y = x + dx * (step - 1), y + dy * (step - 1)
+            if self.cells[self._idx(prev_x, prev_y)][direction]:
+                echoes.append({"type": "wall", "delay": (step - 1) * 2})
+                break
+            nx, ny = x + dx * step, y + dy * step
+            if not self._in_bounds(nx, ny):
+                break
+            if (nx, ny) in self.monsters:
+                echoes.append({"type": "monster", "delay": (step - 1) * 2})
+                break
+            if (nx, ny) == self.end:
+                echoes.append({"type": "exit", "delay": (step - 1) * 2})
+                break
+        return sorted(echoes, key=lambda e: e['delay'])
 
     def _idx(self, x, y):
         return y * self.width + x

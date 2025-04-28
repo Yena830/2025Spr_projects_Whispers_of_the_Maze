@@ -56,32 +56,37 @@ class GameEngine:
         x, y = self.player_pos
         dx, dy = self.maze.DIRECTIONS[direction]
         idx = self.maze._idx(x, y)
+
         if self.maze.cells[idx][direction]:
             print("There's a wall blocking your way!")
             return
+
+        # 正常移动一步
         new_pos = (x + dx, y + dy)
         if not self.maze._in_bounds(*new_pos):
             print("You can't move outside the maze!")
             return
-        self.player_pos = new_pos
-        print(f"You moved to {self.player_pos}.")
-        
-        # 若在冰面，自动滑到下一个可停靠的 floor 节点
-        dest = self.maze.slide_dest.get(self.player_pos, {}).get(direction)
-        if dest is None:
-            print("There's a wall blocking your way!")
-            return
-        self.player_pos = dest
-        print(f"You moved to {self.player_pos}.")
 
+        self.player_pos = new_pos
+
+        # 冰面滑行逻辑
+        if self.maze.floor_type[y + dy][x + dx] == 'ice':
+            dest = self.maze.slide_dest.get(self.player_pos, {}).get(direction)
+            if dest and dest != self.player_pos:
+                print(f"You slide on ice to {dest}.")
+                self.player_pos = dest
+            else:
+                print(f"You moved to {self.player_pos}.")
+        else:
+            print(f"You moved to {self.player_pos}.")
+
+        # 检查胜负条件
         if self.player_pos in self.maze.monsters:
             print("You stepped on a monster! Game Over.")
             self.running = False
         elif self.player_pos == self.maze.end:
             print("You found the exit! Congratulations, you win!")
             self.running = False
-
-
 
 
 if __name__ == "__main__":

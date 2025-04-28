@@ -1,0 +1,184 @@
+import pygame
+from echo_maze import EchoMaze
+
+pygame.init()
+pygame.font.init()
+font = pygame.font.SysFont(None, 60)
+
+slide_sound = pygame.mixer.Sound('sounds/slide.mp3')
+thud_sound = pygame.mixer.Sound('sounds/thud.mp3')
+growl_sound = pygame.mixer.Sound('sounds/growl.mp3')
+breeze_sound = pygame.mixer.Sound('sounds/breeze.mp3')
+win_sound = pygame.mixer.Sound('sounds/win.mp3')
+lose_sound = pygame.mixer.Sound('sounds/lose.mp3')
+
+CELL_SIZE = 40
+VIEW_SIZE = 7  # 视野范围 7x7
+SCREEN = pygame.display.set_mode((VIEW_SIZE * CELL_SIZE, VIEW_SIZE * CELL_SIZE))
+pygame.display.set_caption("EchoMaze - Follow View")
+
+BLACK = (0, 0, 0)
+GRAY = (150, 150, 150)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+CYAN = (0, 100, 255)
+YELLOW = (255, 255, 0)
+
+def draw_button(text, y_pos):
+    button_font = pygame.font.SysFont(None, 40)
+    button_text = button_font.render(text, True, BLACK)
+    button_rect = button_text.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, y_pos))
+    pygame.draw.rect(SCREEN, GRAY, button_rect.inflate(20, 10))
+    SCREEN.blit(button_text, button_rect)
+    return button_rect
+
+def show_start_screen():
+    SCREEN.fill(BLACK)
+    title = font.render("EchoMaze", True, YELLOW)
+    SCREEN.blit(title, title.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, 100)))
+    start_btn = draw_button("Start Game", 200)
+    pygame.display.flip()
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if start_btn.collidepoint(event.pos):
+                    waiting = False
+            elif event.type == pygame.KEYDOWN:
+                waiting = False
+
+def show_end_screen(message, color):
+    SCREEN.fill(BLACK)
+    text = font.render(message, True, color)
+    SCREEN.blit(text, text.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, 100)))
+    restart_btn = draw_button("Restart", 200)
+    quit_btn = draw_button("Quit", 260)
+    pygame.display.flip()
+
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if restart_btn.collidepoint(event.pos):
+                    waiting = False
+                elif quit_btn.collidepoint(event.pos):
+                    pygame.quit()
+                    exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    waiting = False
+                elif event.key == pygame.K_q:
+                    pygame.quit()
+                    exit()
+
+def run_game():
+    maze = EchoMaze(10, 10)
+    player_pos = list(maze.start)
+    echo_feedback = []
+    echo_timer = 0
+    running = True
+    clock = pygame.time.Clock()
+
+    while running:
+        clock.tick(60)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.KEYDOWN:
+                move_dir = None
+                if event.key == pygame.K_UP:
+                    move_dir = 'UP'
+                elif event.key == pygame.K_DOWN:
+                    move_dir = 'DOWN'
+                elif event.key == pygame.K_LEFT:
+                    move_dir = 'LEFT'
+                elif event.key == pygame.K_RIGHT:
+                    move_dir = 'RIGHT'
+
+                if move_dir:
+                    dx, dy = maze.DIRECTIONS[move_dir]
+                    idx = maze._idx(player_pos[0], player_pos[1])
+                    if not maze.cells[idx][move_dir]:
+                        player_pos[0] += dx
+                        player_pos[1] += dy
+                        if maze.floor_type[player_pos[1]][player_pos[0]] == 'ice':
+                            slide_sound.play()
+                            dest = maze.slide_dest.get(tuple(player_pos), {}).get(move_dir)
+                            if dest:
+                                player_pos = list(dest)
+
+                        if tuple(player_pos) == maze.end:
+                            win_sound.play()
+                            show_end_screen("YOU WIN!", GREEN)
+                            return
+                        if tuple(player_pos) in maze.monsters:
+                            lose_sound.play()
+                            show_end_screen("GAME OVER!", RED)
+                            return
+
+                echo_dir = None
+                if event.key == pygame.K_w:
+                    echo_dir = 'UP'
+                elif event.key == pygame.K_s:
+                    echo_dir = 'DOWN'
+                elif event.key == pygame.K_a:
+                    echo_dir = 'LEFT'
+                elif event.key == pygame.K_d:
+                    echo_dir = 'RIGHT'
+
+                if echo_dir:
+                    echoes = maze.send_echo(tuple(player_pos), echo_dir)
+                    echo_feedback = [(echo_dir, e['type'], (e['delay']//2)+1) for e in echoes]
+                    echo_timer = pygame.time.get_ticks()
+                    for e in echoes:
+                        if e['type'] == 'wall':
+                            thud_sound.play()
+                        elif e['type'] == 'monster':
+                            growl_sound.play()
+                        elif e['type'] == 'exit':
+                            breeze_sound.play()
+
+        SCREEN.fill(BLACK)
+
+        px, py = player_pos
+        offset_x = px - VIEW_SIZE // 2
+        offset_y = py - VIEW_SIZE // 2
+
+        for vy in range(VIEW_SIZE):
+            for vx in range(VIEW_SIZE):
+                mx = offset_x + vx
+                my = offset_y + vy
+                if not maze._in_bounds(mx, my):
+                    continue
+
+        if echo_feedback and pygame.time.get_ticks() - echo_timer < 800:
+            for direction, obj_type, steps in echo_feedback:
+                dx, dy = maze.DIRECTIONS[direction]
+                ex, ey = px + dx * steps, py + dy * steps
+                vx = ex - offset_x
+                vy = ey - offset_y
+                if 0 <= vx < VIEW_SIZE and 0 <= vy < VIEW_SIZE:
+                    rect = pygame.Rect(vx * CELL_SIZE, vy * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+                    if obj_type == 'wall':
+                        pygame.draw.rect(SCREEN, GRAY, rect)
+                    elif obj_type == 'monster':
+                        pygame.draw.rect(SCREEN, RED, rect)
+                    elif obj_type == 'exit':
+                        pygame.draw.rect(SCREEN, GREEN, rect)
+
+        center_rect = pygame.Rect((VIEW_SIZE//2) * CELL_SIZE, (VIEW_SIZE//2) * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+        pygame.draw.circle(SCREEN, YELLOW, center_rect.center, CELL_SIZE // 3)
+
+        pygame.display.flip()
+
+show_start_screen()
+while True:
+    run_game()
