@@ -110,6 +110,7 @@ def run_game():
     status_message = "Find the exit and escape this place!"
     clock = pygame.time.Clock()
     global current_sprite
+    current_sprite = player_sprites['DOWN']
 
     while True:
         clock.tick(60)
@@ -168,7 +169,13 @@ def run_game():
                         status_message = "Silence... Nothing detected."
                     else:
                         first_echo = echoes[0]
-                        status_message = f"You hear {first_echo['type']} after {first_echo['delay']}s."
+                        sound_desc = {
+                            'wall': 'a thud',
+                            'monster': 'a growl',
+                            'exit': 'a breeze'
+                        }
+                        heard = sound_desc.get(first_echo['type'], 'something')
+                        status_message = f"You hear {heard} after {first_echo['delay']}s."
                     echo_feedback = [(echo_dir, e['type'], (e['delay']//2)+1) for e in echoes]
                     echo_timer = pygame.time.get_ticks()
                     for e in echoes:
@@ -216,6 +223,10 @@ def run_game():
 
         pygame.display.flip()
 
-show_start_screen()
-while True:
-    run_game()
+def main():
+    show_start_screen()
+    while True:
+        run_game()
+
+if __name__ == "__main__":
+    main()
