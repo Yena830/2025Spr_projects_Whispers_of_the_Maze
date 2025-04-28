@@ -31,6 +31,11 @@ player_sprites = {
 }
 current_sprite = player_sprites['DOWN']
 
+
+monster_img = pygame.image.load('icon/monster.png')
+monster_img = pygame.transform.scale(monster_img, (CELL_SIZE, CELL_SIZE))
+
+
 # player_img = pygame.image.load('icon/icon.png')
 # player_img = pygame.transform.scale(player_img, (CELL_SIZE, CELL_SIZE))
 
@@ -210,7 +215,7 @@ def run_game():
                     if obj_type == 'wall':
                         pygame.draw.rect(SCREEN, GRAY, rect)
                     elif obj_type == 'monster':
-                        pygame.draw.rect(SCREEN, RED, rect)
+                        SCREEN.blit(monster_img, rect)
                     elif obj_type == 'exit':
                         pygame.draw.rect(SCREEN, GREEN, rect)
 
