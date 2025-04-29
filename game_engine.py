@@ -20,7 +20,7 @@ lose_sound = pygame.mixer.Sound('sounds/girl_lose.mp3')
 CELL_SIZE = 60
 VIEW_SIZE = 7  # 视野范围 7x7
 SCREEN = pygame.display.set_mode((VIEW_SIZE * CELL_SIZE, VIEW_SIZE * CELL_SIZE + 50))
-pygame.display.set_caption("EchoMaze - Follow View")
+pygame.display.set_caption("Whispers of the Maze")
 
 
 player_sprites = {
@@ -63,7 +63,7 @@ def show_start_screen():
     SCREEN.blit(title, title.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, 150)))
 
 
-    subtitle = font.render("Can you escape? Find the exit!", True, WHITE)
+    subtitle = font.render("You find yourself lost in the dark...", True, WHITE)
     SCREEN.blit(subtitle, subtitle.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, 200)))
 
 
@@ -111,7 +111,7 @@ def show_end_screen(message, color):
 
 def run_game():
     maze = EchoMaze(10, 10)
-    # maze.print()
+    maze.print()
     player_pos = list(maze.start)
     echo_feedback = []
     echo_timer = 0
@@ -147,16 +147,45 @@ def run_game():
                         status_message = f"You moved {move_dir}."
                         if maze.floor_type[player_pos[1]][player_pos[0]] == 'ice':
                             slide_sound.play()
-                            dest = maze.slide_dest.get(tuple(player_pos), {}).get(move_dir)
+                            # dest = maze.slide_dest.get(tuple(player_pos), {}).get(move_dir)
+                            # if dest:
+                            #     player_pos = list(dest)
+                            #     status_message = f"Oops! You slipped across the ice!"
+                            slide_from = tuple(player_pos)
+                            dest = maze.slide_dest.get(slide_from, {}).get(move_dir)
+
                             if dest:
+                                # 1. 播放滑冰音效
+                                slide_sound.play()
+
+                                # 2. 模拟滑行路径（手动推进一格一格检查怪物）
+                                dx, dy = maze.DIRECTIONS[move_dir]
+                                x, y = slide_from
+                                while (x, y) != dest:
+                                    x += dx
+                                    y += dy
+                                    if (x, y) in maze.monsters:
+                                        growl_sound.play()
+                                        lose_sound.play()
+                                        show_end_screen("GAME OVER!", RED)
+                                        return
+
+                                # 3. 正常滑行结束，更新玩家位置
                                 player_pos = list(dest)
                                 status_message = f"Oops! You slipped across the ice!"
+
+                                # 4. 检查是否滑到终点
+                                if tuple(player_pos) == maze.end:
+                                    win_sound.play()
+                                    show_end_screen("YOU WIN!", GREEN)
+                                    return
 
                         if tuple(player_pos) == maze.end:
                             win_sound.play()
                             show_end_screen("YOU WIN!", GREEN)
                             return
                         if tuple(player_pos) in maze.monsters:
+                            growl_sound.play()
                             lose_sound.play()
                             show_end_screen("GAME OVER!", RED)
                             return
