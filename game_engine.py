@@ -34,6 +34,8 @@ current_sprite = player_sprites['DOWN']
 
 monster_img = pygame.image.load('icon/monster.png')
 monster_img = pygame.transform.scale(monster_img, (CELL_SIZE, CELL_SIZE))
+wall_img = pygame.image.load('icon/wall.png')
+wall_img = pygame.transform.scale(wall_img, (CELL_SIZE, CELL_SIZE))
 
 
 # player_img = pygame.image.load('icon/icon.png')
@@ -109,6 +111,7 @@ def show_end_screen(message, color):
 
 def run_game():
     maze = EchoMaze(10, 10)
+    # maze.print()
     player_pos = list(maze.start)
     echo_feedback = []
     echo_timer = 0
@@ -204,7 +207,7 @@ def run_game():
                 if not maze._in_bounds(mx, my):
                     continue
 
-        if echo_feedback and pygame.time.get_ticks() - echo_timer < 800:
+        if echo_feedback and pygame.time.get_ticks() - echo_timer < 500:
             for direction, obj_type, steps in echo_feedback:
                 dx, dy = maze.DIRECTIONS[direction]
                 ex, ey = px + dx * steps, py + dy * steps
@@ -213,7 +216,7 @@ def run_game():
                 if 0 <= vx < VIEW_SIZE and 0 <= vy < VIEW_SIZE:
                     rect = pygame.Rect(vx * CELL_SIZE, vy * CELL_SIZE + 50, CELL_SIZE, CELL_SIZE)
                     if obj_type == 'wall':
-                        pygame.draw.rect(SCREEN, GRAY, rect)
+                        SCREEN.blit(wall_img,rect)
                     elif obj_type == 'monster':
                         SCREEN.blit(monster_img, rect)
                     elif obj_type == 'exit':
