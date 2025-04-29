@@ -103,7 +103,7 @@ class AISolver:
         return result
 
 
-def run_batch(runs=100, width=10, height=10):
+def run_batch(runs=1000, width=10, height=10):
     successes = failures = 0
     total_moves = total_echoes = total_time = total_gen_time = 0.0
 
@@ -125,7 +125,7 @@ def run_batch(runs=100, width=10, height=10):
         total_gen_time += gen_time
 
     print(f"=== Batch ({runs} runs) Summary ===")
-    print(f"Successes: {successes}, Failures: {failures}")
+    print(f"Successes: {successes}, Failures: {failures},Success Rate: {successes/runs}")
     print(f"Avg moves: {total_moves/runs:.2f}")
     print(f"Avg echoes: {total_echoes/runs:.2f}")
     print(f"Avg session time: {total_time/runs:.3f}s")
@@ -142,4 +142,4 @@ def run_batch(runs=100, width=10, height=10):
     }
 
 if __name__ == '__main__':
-    run_batch(1000, 10, 10)
+    run_batch(5000, 10, 10)
