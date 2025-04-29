@@ -1,100 +1,145 @@
-# ai_solver.py
+# ai.py
 
-import random
-from collections import deque
+import time
 from echo_maze import EchoMaze
 
 class AISolver:
+    """
+    Tremaux-based AI for EchoMaze:
+    - Marks directed edges with states 0=unvisited, 1=grey, 2=black
+    - Each edge is explored at most twice (grey then black)
+    - Uses a backtrack stack to return from dead ends
+    - Tracks moves, echoes, and session time
+    """
     def __init__(self, width=10, height=10):
+        # Maze generation
         self.maze = EchoMaze(width, height)
-        self.maze.print()
+        # Optional: self.maze.print()  # comment out for batch
         self.player_pos = self.maze.start
-        self.visited = set()
-        self.backtrack_stack = deque()
-        self.last_move = None
-        print("Maze Initialized. Starting at", self.player_pos)
+        self.edge_state = {}
+        self.backtrack_stack = []
+        self.echo_count = 0
+        self.move_count = 0
 
-    def play(self):
-        while True:
-            if self.player_pos == self.maze.end:
-                print("Found the exit! Escaped successfully!")
-                break
-            if self.player_pos in self.maze.monsters:
-                print("Stepped on a monster... Game Over!")
-                break
-
-            move_dir = self.choose_move()
-            if move_dir:
-                print(f"Move {move_dir}")
-                if not self.move_player(move_dir):
-                    print("Bumped into a wall unexpectedly!")
-            else:
-                # Dead-end: backtrack
-                if self.backtrack_stack:
-                    prev_pos, came_from = self.backtrack_stack.pop()
-                    self.player_pos = prev_pos
-                    self.last_move = came_from
-                    print(f"Dead-end! Backtracking to {prev_pos}")
-                else:
-                    print("Nowhere to backtrack! AI stuck!")
-                    break
-
-    def choose_move(self):
-        echo_results = {}
-        for d in ['UP', 'DOWN', 'LEFT', 'RIGHT']:
-            echoes = self.maze.send_echo(self.player_pos, d)
-            if echoes:
-                echo_results[d] = echoes[0]  # 只看最近的反应
-                print(f"Echo {d}: Detected {echoes[0]['type']} after {echoes[0]['delay']}s")
-            else:
-                echo_results[d] = {'type': 'silence', 'delay': 99}
-                print(f"Echo {d}: Silence...")
-
-        possible_dirs = []
-        for d in ['UP', 'DOWN', 'LEFT', 'RIGHT']:
-            if self.maze.cells[self.maze._idx(self.player_pos[0], self.player_pos[1])][d]:
-                continue  # 有墙不能走
-            if echo_results[d]['type'] == 'wall' and echo_results[d]['delay'] == 0:
-                continue  # 0s撞墙
-            dx, dy = self.maze.DIRECTIONS[d]
-            next_pos = (self.player_pos[0] + dx, self.player_pos[1] + dy)
-            if next_pos not in self.visited:
-                possible_dirs.append(d)
-
-        # 尽量不走回头路
-        non_back_dirs = [d for d in possible_dirs if not (self.last_move and self.maze.OPPOSITE[d] == self.last_move)]
-
-        if non_back_dirs:
-            return random.choice(non_back_dirs)
-        elif possible_dirs:
-            return random.choice(possible_dirs)
-        else:
-            return None
-
-    def move_player(self, direction):
-        x, y = self.player_pos
+    def mark_edge_state(self, pos, direction, state):
+        self.edge_state[(pos, direction)] = state
+        opp = self.maze.OPPOSITE[direction]
         dx, dy = self.maze.DIRECTIONS[direction]
-        idx = self.maze._idx(x, y)
+        adj = (pos[0] + dx, pos[1] + dy)
+        self.edge_state[(adj, opp)] = state
+
+    def can_traverse(self, pos, direction):
+        idx = self.maze._idx(*pos)
         if self.maze.cells[idx][direction]:
             return False
-        # Move one step
-        new_pos = (x + dx, y + dy)
-        if not self.maze._in_bounds(*new_pos):
+        echoes = self.maze.send_echo(pos, direction)
+        self.echo_count += 1
+        if echoes and echoes[0]['delay'] == 0 and echoes[0]['type'] in ('wall', 'monster'):
             return False
-        self.visited.add(new_pos)
-        self.backtrack_stack.append((self.player_pos, self.maze.OPPOSITE[direction]))
-        self.player_pos = new_pos
-
-        # 滑冰逻辑
-        if self.maze.floor_type[y + dy][x + dx] == 'ice':
-            dest = self.maze.slide_dest.get(self.player_pos, {}).get(direction)
-            if dest:
-                print(f"Sliding on ice to {dest}")
-                self.player_pos = dest
-                self.visited.add(dest)
-        self.last_move = direction
         return True
 
-if __name__ == "__main__":
-    ai = AISolver(10, 10)
-    ai.play()
+    def next_move(self):
+        for state in (0, 1):
+            for d in self.maze.DIRECTIONS:
+                if self.edge_state.get((self.player_pos, d), 0) == state and self.can_traverse(self.player_pos, d):
+                    return d
+        return None
+
+    def traverse_edge(self, direction):
+        pos = self.player_pos
+        curr = self.edge_state.get((pos, direction), 0)
+        new_state = 1 if curr == 0 else 2 if curr == 1 else None
+        if new_state is None:
+            return False
+        self.mark_edge_state(pos, direction, new_state)
+        self.backtrack_stack.append(self.maze.OPPOSITE[direction])
+        dx, dy = self.maze.DIRECTIONS[direction]
+        self.player_pos = (pos[0] + dx, pos[1] + dy)
+        self.move_count += 1
+        if self.maze.floor_type[pos[1] + dy][pos[0] + dx] == 'ice':
+            dest = self.maze.slide_dest.get(self.player_pos, {}).get(direction)
+            if dest and dest != self.player_pos:
+                self.player_pos = dest
+                self.move_count += 1
+        return True
+
+    def backtrack(self):
+        if not self.backtrack_stack:
+            return False
+        direction = self.backtrack_stack.pop()
+        pos = self.player_pos
+        dx, dy = self.maze.DIRECTIONS[direction]
+        self.player_pos = (pos[0] + dx, pos[1] + dy)
+        self.move_count += 1
+        if self.maze.floor_type[pos[1] + dy][pos[0] + dx] == 'ice':
+            dest = self.maze.slide_dest.get(self.player_pos, {}).get(direction)
+            if dest and dest != self.player_pos:
+                self.player_pos = dest
+                self.move_count += 1
+        return True
+
+    def play(self):
+        start = time.time()
+        result = {'found_exit': False, 'hit_monster': False}
+        while True:
+            if self.player_pos == self.maze.end:
+                result['found_exit'] = True
+                break
+            if self.player_pos in self.maze.monsters:
+                result['hit_monster'] = True
+                break
+            d = self.next_move()
+            if d:
+                self.traverse_edge(d)
+            else:
+                if self.backtrack_stack:
+                    self.backtrack()
+                else:
+                    break
+        end = time.time()
+        result['moves'] = self.move_count
+        result['echoes'] = self.echo_count
+        result['time'] = end - start
+        return result
+
+
+def run_batch(runs=100, width=10, height=10):
+    successes = failures = 0
+    total_moves = total_echoes = total_time = total_gen_time = 0.0
+
+    for _ in range(runs):
+        # Measure generation time
+        gen_start = time.time()
+        ai = AISolver(width, height)
+        gen_time = time.time() - gen_start
+
+        stats = ai.play()
+        if stats['found_exit']:
+            successes += 1
+        else:
+            failures += 1
+
+        total_moves += stats['moves']
+        total_echoes += stats['echoes']
+        total_time += stats['time']
+        total_gen_time += gen_time
+
+    print(f"=== Batch ({runs} runs) Summary ===")
+    print(f"Successes: {successes}, Failures: {failures}")
+    print(f"Avg moves: {total_moves/runs:.2f}")
+    print(f"Avg echoes: {total_echoes/runs:.2f}")
+    print(f"Avg session time: {total_time/runs:.3f}s")
+    print(f"Avg generation time: {total_gen_time/runs:.3f}s")
+
+    return {
+        'runs': runs,
+        'successes': successes,
+        'failures': failures,
+        'avg_moves': total_moves / runs,
+        'avg_echoes': total_echoes / runs,
+        'avg_time': total_time / runs,
+        'avg_gen_time': total_gen_time / runs
+    }
+
+if __name__ == '__main__':
+    run_batch(1000, 10, 10)
