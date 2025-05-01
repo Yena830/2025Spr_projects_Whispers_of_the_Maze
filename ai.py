@@ -29,7 +29,7 @@ class AISolver:
         self.edge_state[(adj, opp)] = state
 
     def can_traverse(self, pos, direction):
-        idx = self.maze._idx(*pos)
+        idx = self.maze.idx(*pos)
         if self.maze.cells[idx][direction]:
             return False
         echoes = self.maze.send_echo(pos, direction)
