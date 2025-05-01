@@ -61,7 +61,7 @@ class GameEngine:
             print("There's a wall blocking your way!")
             return
 
-        # 正常移动一步
+        # Move
         new_pos = (x + dx, y + dy)
         if not self.maze._in_bounds(*new_pos):
             print("You can't move outside the maze!")
@@ -69,7 +69,7 @@ class GameEngine:
 
         self.player_pos = new_pos
 
-        # 冰面滑行逻辑
+        # Slide
         if self.maze.floor_type[y + dy][x + dx] == 'ice':
             dest = self.maze.slide_dest.get(self.player_pos, {}).get(direction)
             if dest and dest != self.player_pos:
@@ -80,7 +80,7 @@ class GameEngine:
         else:
             print(f"You moved to {self.player_pos}.")
 
-        # 检查胜负条件
+        # Check game status
         if self.player_pos in self.maze.monsters:
             print("You stepped on a monster! Game Over.")
             self.running = False

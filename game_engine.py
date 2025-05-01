@@ -7,7 +7,6 @@ title_font=pygame.font.Font('fonts/Tiny5-Regular.ttf',40)
 font = pygame.font.Font('fonts/Tiny5-Regular.ttf',25)
 small_font = pygame.font.Font('fonts/Tiny5-Regular.ttf',25)
 
-
 pygame.mixer.music.load('sounds/creepy_bg.mp3')
 pygame.mixer.music.play(-1)
 slide_sound = pygame.mixer.Sound('sounds/slide.mp3')
@@ -18,7 +17,7 @@ win_sound = pygame.mixer.Sound('sounds/win.mp3')
 lose_sound = pygame.mixer.Sound('sounds/girl_lose.mp3')
 
 CELL_SIZE = 60
-VIEW_SIZE = 7  # 视野范围 7x7
+VIEW_SIZE = 7  
 SCREEN = pygame.display.set_mode((VIEW_SIZE * CELL_SIZE, VIEW_SIZE * CELL_SIZE + 50))
 pygame.display.set_caption("Whispers of the Maze")
 
@@ -174,7 +173,7 @@ def run_game(difficulty):
                 if move_dir:
                     current_sprite = player_sprites[move_dir]
                     dx, dy = maze.DIRECTIONS[move_dir]
-                    idx = maze._idx(player_pos[0], player_pos[1])
+                    idx = maze.idx(player_pos[0], player_pos[1])
                     if not maze.cells[idx][move_dir]:
                         player_pos[0] += dx
                         player_pos[1] += dy
@@ -189,10 +188,10 @@ def run_game(difficulty):
                             dest = maze.slide_dest.get(slide_from, {}).get(move_dir)
 
                             if dest:
-                                # 1. 播放滑冰音效
+                                # 1. Play skating sound effects
                                 slide_sound.play()
 
-                                # 2. 模拟滑行路径（手动推进一格一格检查怪物）
+                                # 2. Simulated sliding path (Manually advance one by one to check the monsters)
                                 dx, dy = maze.DIRECTIONS[move_dir]
                                 x, y = slide_from
                                 while (x, y) != dest:
@@ -204,11 +203,13 @@ def run_game(difficulty):
                                         show_end_screen("GAME OVER!", RED)
                                         return
 
-                                # 3. 正常滑行结束，更新玩家位置
+                                # 3. sliding ends. Update the player's position
                                 player_pos = list(dest)
                                 status_message = f"Oops! You slipped across the ice!"
 
-                                # 4. 检查是否滑到终点
+
+
+                                # 4. Examine if skating to the ends
                                 if tuple(player_pos) == maze.end:
                                     win_sound.play()
                                     show_end_screen("YOU WIN!", GREEN)
@@ -267,7 +268,7 @@ def run_game(difficulty):
             for vx in range(VIEW_SIZE):
                 mx = offset_x + vx
                 my = offset_y + vy
-                if not maze._in_bounds(mx, my):
+                if not maze.in_bounds(mx, my):
                     continue
 
         if echo_feedback and pygame.time.get_ticks() - echo_timer < 500:
