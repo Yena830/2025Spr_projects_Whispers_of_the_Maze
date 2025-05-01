@@ -24,9 +24,9 @@ The maze includes randomly placed monsters and ice corridors that challenge path
 ### 🔊 Echo Detection (`W`, `A`, `S`, `D`)
 - Echo travels **up to 3 cells** in a direction.
 - Echo stops upon hitting:
-  - **Wall** → plays *thud* sound + shows gray square.
-  - **Monster** → plays *growl* + flashes monster icon.
-  - **Exit** → plays *breeze* + flashes exit icon.
+  - **Wall** → plays *thud* sound + shows wall icon.
+  - **Monster** → plays *growl* + shows monster icon.
+  - **Exit** → plays *breeze* + shows exit icon.
 
 ### 🎮 Movement (Arrow Keys)
 - The player moves **1 cell per arrow press** if no wall is present.
