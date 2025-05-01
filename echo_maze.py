@@ -21,9 +21,10 @@ class EchoMaze:
     }
     OPPOSITE = {'UP': 'DOWN', 'DOWN': 'UP', 'RIGHT': 'LEFT', 'LEFT': 'RIGHT'}
 
-    def __init__(self, width=10, height=10, monster_count=None, difficulty=0.5):
+    def __init__(self, width=10, height=10, difficulty='easy',monster_count=None):
         self.width = width
         self.height = height
+        self.difficulty = difficulty
         #每个cell初始化四面墙
         self.cells = [{d: True for d in self.DIRECTIONS} for _ in range(width * height)]
         # 地面类型 floor vs ice，默认全 floor
@@ -46,6 +47,8 @@ class EchoMaze:
                     break
         # 生成迷宫、求解最短路、放怪物
         self._dfs_carve(self.start, set())
+        if self.difficulty in ['medium', 'hard']:
+            self.add_extra_paths(extra_count=5)
         self.solution = self._solve(self.start, self.end)
         self.place_monsters(monster_count)
         #构建滑道图 & 铺冰面
@@ -115,15 +118,47 @@ class EchoMaze:
             node = prev.get(node)
         return path[::-1]
 
+    def add_extra_paths(self, extra_count=5):
+        added = 0
+        attempts = 0
+        max_attempts = extra_count * 10
+        while added < extra_count and attempts < max_attempts:
+            x = random.randint(0, self.width - 1)
+            y = random.randint(0, self.height - 1)
+            dir, (dx, dy) = random.choice(list(self.DIRECTIONS.items()))
+            nx, ny = x + dx, y + dy
+            if self._in_bounds(nx, ny):
+                if self.cells[self._idx(x, y)][dir]:
+                    self.cells[self._idx(x, y)][dir] = False
+                    self.cells[self._idx(nx, ny)][self.OPPOSITE[dir]] = False
+                    added += 1
+            attempts += 1
+
     def place_monsters(self, count=None):
         all_cells = {(x, y) for x in range(self.width) for y in range(self.height)}
-        candidate_cells = list(all_cells - set(self.solution))
-        max_monsters = int(len(candidate_cells) * 0.2)
-        self.monsters = random.sample(candidate_cells, max_monsters)
+        solution_set = set(self.solution)
+        non_solution_cells = list(all_cells - solution_set)
+        max_monsters = int(len(non_solution_cells) * 0.2)
+        monsters = set()
+
+        if self.difficulty == 'easy':
+            monsters.update(random.sample(non_solution_cells, max_monsters))
+
+        elif self.difficulty == 'medium':
+            monsters.update(random.sample(non_solution_cells, max_monsters))
+
+        # elif self.difficulty == 'hard':
+        #
+        #     path_cells = list(solution_set - {self.start, self.end})
+        #     extra_on_path = max(1, int(len(path_cells) * 0.1))
+        #     monsters.update(random.sample(non_solution_cells, max_monsters))
+        #     monsters.update(random.sample(path_cells, extra_on_path))
+
+        self.monsters = monsters
 
 
-    
-    
+
+
     ####根据连通格提取节点与走廊列表#########################
     def _extract_graph(self):
         """
@@ -315,7 +350,7 @@ class EchoMaze:
                      for y in range(self.height)
                      for x in range(self.width)
                      if getattr(self, 'floor_type', None) and self.floor_type[y][x] == 'ice']
-        print(f"Ice cells: {ice_cells}")
+        # print(f"Ice cells: {ice_cells}")
         
         
 
@@ -360,5 +395,7 @@ class EchoMaze:
             print(bottom)
 
         
-
+if __name__ =="__main__":
+    maze=EchoMaze(10,10,difficulty='medium')
+    maze.print()
         

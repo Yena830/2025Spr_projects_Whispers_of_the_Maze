@@ -3,9 +3,9 @@ from echo_maze import EchoMaze
 
 pygame.init()
 pygame.font.init()
-title_font=pygame.font.SysFont(None,50)
-font = pygame.font.SysFont(None, 30)
-small_font = pygame.font.SysFont(None, 30)
+title_font=pygame.font.Font('fonts/Tiny5-Regular.ttf',40)
+font = pygame.font.Font('fonts/Tiny5-Regular.ttf',25)
+small_font = pygame.font.Font('fonts/Tiny5-Regular.ttf',25)
 
 
 pygame.mixer.music.load('sounds/creepy_bg.mp3')
@@ -52,7 +52,7 @@ YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
 
 def draw_button(text, y_pos):
-    button_font = pygame.font.SysFont(None, 40)
+    button_font = pygame.font.Font('fonts/Tiny5-Regular.ttf',30)
     button_text = button_font.render(text, True, BLACK)
     button_rect = button_text.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, y_pos))
     pygame.draw.rect(SCREEN, GRAY, button_rect.inflate(20, 10))
@@ -84,6 +84,37 @@ def show_start_screen():
             elif event.type == pygame.KEYDOWN:
                 waiting = False
 
+def show_difficulty_screen():
+    SCREEN.fill(BLACK)
+    title = title_font.render("Select Difficulty", True, RED)
+    SCREEN.blit(title, title.get_rect(center=(VIEW_SIZE * CELL_SIZE // 2, 150)))
+
+    easy_btn = draw_button("Easy", 250)
+    medium_btn = draw_button("Medium", 310)
+    # hard_btn = draw_button("Hard", 370)
+    pygame.display.flip()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if easy_btn.collidepoint(event.pos):
+                    return 'easy'
+                elif medium_btn.collidepoint(event.pos):
+                    return 'medium'
+                # elif hard_btn.collidepoint(event.pos):
+                #     return 'hard'
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    return 'easy'
+                elif event.key == pygame.K_2:
+                    return 'medium'
+                # elif event.key == pygame.K_3:
+                #     return 'hard'
+
+
 def show_end_screen(message, color):
     SCREEN.fill(BLACK)
     text = title_font.render(message, True, color)
@@ -92,28 +123,29 @@ def show_end_screen(message, color):
     quit_btn = draw_button("Quit", 350)
     pygame.display.flip()
 
-    waiting = True
-    while waiting:
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if restart_btn.collidepoint(event.pos):
-                    waiting = False
+                    return True
                 elif quit_btn.collidepoint(event.pos):
                     pygame.quit()
                     exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
-                    waiting = False
+                    return True
                 elif event.key == pygame.K_q:
                     pygame.quit()
                     exit()
 
-def run_game():
-    maze = EchoMaze(10, 10)
-    maze.print()
+
+def run_game(difficulty):
+    maze = EchoMaze(10, 10,difficulty)
+    # for testing
+    # maze.print()
     player_pos = list(maze.start)
     echo_feedback = []
     echo_timer = 0
@@ -184,13 +216,13 @@ def run_game():
 
                         if tuple(player_pos) == maze.end:
                             win_sound.play()
-                            show_end_screen("YOU WIN!", GREEN)
-                            return
+                            if show_end_screen("YOU WIN!", GREEN):
+                                return
                         if tuple(player_pos) in maze.monsters:
                             growl_sound.play()
                             lose_sound.play()
-                            show_end_screen("GAME OVER!", RED)
-                            return
+                            if show_end_screen("GAME OVER!", RED):
+                                return
 
                 echo_dir = None
                 if event.key == pygame.K_w:
@@ -264,8 +296,10 @@ def run_game():
 
 def main():
     show_start_screen()
+
     while True:
-        run_game()
+        difficulty = show_difficulty_screen()
+        run_game(difficulty)
 
 if __name__ == "__main__":
     main()
