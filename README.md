@@ -38,7 +38,7 @@ The maze includes randomly placed monsters and ice corridors that challenge path
 - ![img.png](img/img.png)
 ### 🏁 Exit
 - Reaching the exit = **you win**.
-- ![img_2.png](img_2.png)
+- ![img_2.png](img/img_2.png)
 ---
 ## 3. Game Controls
 
@@ -97,7 +97,7 @@ This makes the search more efficient compared to naive uninformed search.
 #### 📊 Batch Testing Summary
 
 We evaluated the system using the `run_batch()` function over 5,000 iterations:
-![img_1.png](img_1.png)
+![img_1.png](img/img_1.png)
 These batch tests help verify:
 ✅ Maze solvability  
 ✅ Difficulty curve between modes  
