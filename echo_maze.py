@@ -48,9 +48,9 @@ class EchoMaze:
         # 生成迷宫、求解最短路、放怪物
         self._dfs_carve(self.start, set())
         if self.difficulty in ['medium', 'hard']:
-            self.add_extra_paths(extra_count=5)
+            self._add_extra_paths(extra_count=5)
         self.solution = self._solve(self.start, self.end)
-        self.place_monsters(monster_count)
+        self._place_monsters(monster_count)
         #构建滑道图 & 铺冰面
         self._extract_graph()  
         self._assign_ice_by_ratio(ratio=0.3)  
@@ -118,7 +118,7 @@ class EchoMaze:
             node = prev.get(node)
         return path[::-1]
 
-    def add_extra_paths(self, extra_count=5):
+    def _add_extra_paths(self, extra_count=5):
         added = 0
         attempts = 0
         max_attempts = extra_count * 10
@@ -134,11 +134,11 @@ class EchoMaze:
                     added += 1
             attempts += 1
 
-    def place_monsters(self, count=None):
+    def _place_monsters(self, count=None):
         all_cells = {(x, y) for x in range(self.width) for y in range(self.height)}
         solution_set = set(self.solution)
         non_solution_cells = list(all_cells - solution_set)
-        max_monsters = int(len(non_solution_cells) * 0.2)
+        max_monsters = int(len(non_solution_cells) * 0.1)
         monsters = set()
 
         if self.difficulty == 'easy':
@@ -396,6 +396,6 @@ class EchoMaze:
 
         
 if __name__ =="__main__":
-    maze=EchoMaze(10,10,difficulty='medium')
+    maze=EchoMaze(10,10,difficulty='easy')
     maze.print()
         
