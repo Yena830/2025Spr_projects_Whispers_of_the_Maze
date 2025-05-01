@@ -11,10 +11,10 @@ class AISolver:
     - Uses a backtrack stack to return from dead ends
     - Tracks moves, echoes, and session time
     """
-    def __init__(self, width=10, height=10):
+    def __init__(self, width=10, height=10,difficulty='easy'):
         # Maze generation
-        self.maze = EchoMaze(width, height)
-        # Optional: self.maze.print()  # comment out for batch
+        self.maze = EchoMaze(width, height,difficulty)
+        # self.maze.print()  # comment out for batch
         self.player_pos = self.maze.start
         self.edge_state = {}
         self.backtrack_stack = []
@@ -103,14 +103,14 @@ class AISolver:
         return result
 
 
-def run_batch(runs=1000, width=10, height=10):
+def run_batch(runs=1000, width=10, height=10, diffculty='easy'):
     successes = failures = 0
     total_moves = total_echoes = total_time = total_gen_time = 0.0
 
     for _ in range(runs):
         # Measure generation time
         gen_start = time.time()
-        ai = AISolver(width, height)
+        ai = AISolver(width, height,diffculty)
         gen_time = time.time() - gen_start
 
         stats = ai.play()
@@ -124,7 +124,7 @@ def run_batch(runs=1000, width=10, height=10):
         total_time += stats['time']
         total_gen_time += gen_time
 
-    print(f"=== Batch ({runs} runs) Summary ===")
+    print(f"=== {diffculty} Mode Batch ({runs} runs) Summary ===")
     print(f"Successes: {successes}, Failures: {failures},Success Rate: {successes/runs}")
     print(f"Avg moves: {total_moves/runs:.2f}")
     print(f"Avg echoes: {total_echoes/runs:.2f}")
@@ -142,4 +142,5 @@ def run_batch(runs=1000, width=10, height=10):
     }
 
 if __name__ == '__main__':
-    run_batch(5000, 10, 10)
+    run_batch(5000, 10, 10,'easy')
+    run_batch(5000, 10, 10,'medium')

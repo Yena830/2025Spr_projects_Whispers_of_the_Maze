@@ -20,7 +20,7 @@ The maze includes randomly placed monsters and ice corridors that challenge path
 ### 👁️ Blind Navigation
 - The player sees **only their current cell**.
 - All other cells are hidden until revealed via echo.
-![img.png](img/img1.png)
+- ![img.png](img/img1.png)
 ### 🔊 Echo Detection (`W`, `A`, `S`, `D`)
 - Echo travels **up to 3 cells** in a direction.
 - Echo stops upon hitting:
@@ -35,10 +35,10 @@ The maze includes randomly placed monsters and ice corridors that challenge path
 ### 💀 Monsters
 - Hidden in the dark.
 - Stepping on one = **instant game over**.
-![img.png](img/img.png)
+- ![img.png](img/img.png)
 ### 🏁 Exit
 - Reaching the exit = **you win**.
-
+- ![img_2.png](img_2.png)
 ---
 ## 3. Game Controls
 
@@ -56,10 +56,13 @@ The maze includes randomly placed monsters and ice corridors that challenge path
 ---
 ## 4. Algorithm Analysis & Performance
 
-### Maze Generation (DFS-based backtracking)
-- The maze is a *perfect maze* (i.e., fully connected and loop-free), generated using randomized depth-first search.
-- Each cell is visited once with constant-time wall updates.
-- **Time Complexity**: O(N), where N = width × height (i.e., total number of cells).
+### Maze Generation (DFS-based backtracking + difficulty scaling)
+- The **base maze** is a fully connected, loop-free maze, generated using randomized depth-first search.
+- In **medium**  difficulty, we add random extra paths after the base maze is built.
+- Each cell is visited once (DFS), and additional edges are inserted with constant-time updates.
+- **Time Complexity**:
+  - Easy → O(N)
+  - Medium → O(N + P), where P is the number of extra added paths (small, user-defined).
 
 ### Shortest Path Solver (for internal validation only)
 - A breadth-first search (BFS) is used to ensure that the start and exit are connected and to identify the shortest path for testing purposes.
@@ -71,18 +74,34 @@ The maze includes randomly placed monsters and ice corridors that challenge path
 - Early termination occurs upon detecting a wall, monster, or exit.
 - **Time Complexity**: Constant-time per direction → **O(1)**.
 
-### AI Exploration (testing agent)
-#### Time&Space complexity
-- A simple AI agent mimics human-like reasoning using echo signals.
-- **Naive DFS** (uninformed):
-  - Worst-case: explores up to O(4^d) nodes, where d is path depth.
-- **Heuristic Search**:
-  - Echo feedback prioritizes directions (e.g., breeze > silence > thud).
-  - Reduces unnecessary branching via visited history and backtracking logic.
-#### Batch Summary
-We evaluated the AI's efficiency and reliability using `run_batch()` over 10,000 iterations:
+### 🤖 AI Exploration (Testing Agent)
 
-![img_1.png](img/img4.png)
+We developed a simple AI agent (`AISolver`) to automatically play and evaluate the game.  
+The agent mimics human-like reasoning by sending echo signals (breeze, thud, growl) to inform its decisions.
+
+#### Time & Space Complexity
+
+- **Tremaux-based Exploration**:
+  - The AI marks each edge as unvisited (0), visited once (1), or visited twice (2).
+  - Each edge is traversed at most twice (once forward, once during backtracking).
+  - **Worst-case Time Complexity**:
+    - O(2E), where E is the number of maze edges.
+    - For a perfect maze, E ≈ N – 1 → simplifies to **O(N)**.
+    - For medium/hard modes (with extra P paths), total complexity becomes **O(N + P)**.
+  - **Space Complexity**:
+    - O(E), to track edge states and backtracking stack.
+
+This makes the search more efficient compared to naive uninformed search.
+
+
+#### 📊 Batch Testing Summary
+
+We evaluated the system using the `run_batch()` function over 5,000 iterations:
+![img_1.png](img_1.png)
+These batch tests help verify:
+✅ Maze solvability  
+✅ Difficulty curve between modes  
+✅ System performance and generation time
 
 #### Profiler Results (cProfile + PyCharm visualization)
 Based on the profiling data over 5000 runs:
