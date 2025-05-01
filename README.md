@@ -56,7 +56,7 @@ The maze includes randomly placed monsters and ice corridors that challenge path
 ---
 ## 4. Algorithm Analysis & Performance
 
-### Maze Generation (DFS-based backtracking + difficulty scaling)
+### Maze Generation (DFS-based backtracking)
 - The **base maze** is a fully connected, loop-free maze, generated using randomized depth-first search.
 - In **medium**  difficulty, we add random extra paths after the base maze is built.
 - Each cell is visited once (DFS), and additional edges are inserted with constant-time updates.
@@ -64,7 +64,7 @@ The maze includes randomly placed monsters and ice corridors that challenge path
   - Easy → O(N)
   - Medium → O(N + P), where P is the number of extra added paths (small, user-defined).
 
-### Shortest Path Solver (for internal validation only)
+### Shortest Path Solver
 - A breadth-first search (BFS) is used to ensure that the start and exit are connected and to identify the shortest path for testing purposes.
 - **Time Complexity**: O(N + E), where N is the number of cells and E is the number of edges.
   - For a perfect maze, E ≈ N – 1 → Simplifies to **O(N)**.
