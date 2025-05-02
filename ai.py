@@ -142,5 +142,6 @@ def run_batch(runs=1000, width=10, height=10, diffculty='easy'):
     }
 
 if __name__ == '__main__':
-    run_batch(5000, 10, 10,'easy')
-    run_batch(5000, 10, 10,'medium')
+    run_batch(1000, 10, 10,'easy')
+    run_batch(1000, 30, 30, 'easy')
+
