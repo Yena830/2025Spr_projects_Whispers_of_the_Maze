@@ -320,10 +320,10 @@ class EchoMaze:
         * = floor on solution path, ~ = ice off path, # = ice on path
         """
         path_set = set(self.solution)
-        ice_cells = [(x, y)
-                     for y in range(self.height)
-                     for x in range(self.width)
-                     if getattr(self, 'floor_type', None) and self.floor_type[y][x] == 'ice']
+        # ice_cells = [(x, y)
+        #              for y in range(self.height)
+        #              for x in range(self.width)
+        #              if getattr(self, 'floor_type', None) and self.floor_type[y][x] == 'ice']
         # print(f"Ice cells: {ice_cells}")
         
         print('+' + '---+' * self.width)

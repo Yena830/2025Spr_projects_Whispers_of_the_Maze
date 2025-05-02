@@ -1,5 +1,8 @@
 # Whispers of the Maze
-### Team Member: Yueyue Lin, Peiyao Yang
+### Team Member: Yueyue Lin (yueyuel4), Peiyao Yang (peiyao3)
+## Team Contributo
+- **Yueyue Lin**: Led the design and implementation of core gameplay features, including echo sound logic, monster placement, AI agent development, Pygame integration, difficulty scaling, visual and sound rendering.
+- **Peiyao Yang**: Tasks involved generating the initial maze structure, implementing an optimal solution using BFS, and introducing and realizing the ice-sliding mechanic within the gameplay system.
 
 ## 1. Project Overview
 Whispers of the Maze is a procedurally generated puzzle game where players navigate a hidden maze using only audio cues. Inspired by echolocation and logic puzzles, players explore the environment by emitting directional echoes that reveal what lies ahead—walls, monsters, or the goal.
