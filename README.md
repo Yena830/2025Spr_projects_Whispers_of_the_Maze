@@ -1,8 +1,18 @@
 # Whispers of the Maze
 ### Team Member: Yueyue Lin (yueyuel4), Peiyao Yang (peiyao3)
-## Team Contributo
+## Team Contribution
 - **Yueyue Lin**: Led the design and implementation of core gameplay features, including echo sound logic, monster placement, AI agent development, Pygame integration, difficulty scaling, visual and sound rendering.
 - **Peiyao Yang**: Tasks involved generating the initial maze structure, implementing an optimal solution using BFS, and introducing and realizing the ice-sliding mechanic within the gameplay system.
+
+---
+## How to Play
+
+1. Download the repository and Install Python + `pygame`:
+   ```bash
+   pip install pygame
+2. Run quick_start.py
+    ```bash
+   python quick_start.py
 
 ## 1. Project Overview
 Whispers of the Maze is a procedurally generated puzzle game where players navigate a hidden maze using only audio cues. Inspired by echolocation and logic puzzles, players explore the environment by emitting directional echoes that reveal what lies ahead—walls, monsters, or the goal.
@@ -127,19 +137,10 @@ The majority of runtime is spent in pre-processing (`_extract_graph`, `_clear_pa
   - `word_game.py`: CLI version
   - `pygame_game.py`: Main interactive game
 
+  
 ---
-## 6. How to Run
-
-1. Install Python + `pygame`:
-   ```bash
-   pip install pygame
-2. Run quick_start.py
-    ```bash
-   python quick_start.py
-   
----
-## 7. Future Improvements
-1. The AI is still not intelligent enough and may fail to find the exit in some configurations.
+## 6. Future Improvements
+1. The AI is still not intelligent enough.
 2. Since the map is randomly generated, difficulty varies—sometimes paths are too straightforward without any monsters or forks. Adaptive difficulty scaling could help.
 3. Add visual or auditory feedback for ice sliding duration.
 4. Enable user-selectable maze size or difficulty presets.
