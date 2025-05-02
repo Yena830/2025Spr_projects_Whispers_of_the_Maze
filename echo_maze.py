@@ -151,7 +151,7 @@ class EchoMaze:
         all_cells = {(x, y) for x in range(self.width) for y in range(self.height)}
         solution_set = set(self.solution)
         non_solution_cells = list(all_cells - solution_set)
-        max_monsters = int(len(non_solution_cells) * 0.1)
+        max_monsters = int(len(non_solution_cells) * 0.2)
         monsters = set()
 
         if self.difficulty == 'easy':
